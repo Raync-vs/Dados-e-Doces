@@ -223,10 +223,10 @@ function criarCardAdmin(produto) {
 }
 
 async function renderizarVitrine() {
-	adminVitrine.replaceChildren();
 	vitrineStatus.textContent = "Carregando...";
 	try {
 		const snapshot = await getDocs(collection(db, "produtos"));
+		adminVitrine.replaceChildren();
 		const produtos = snapshot.docs.map((documento) => ({ id: documento.id, ...documento.data() }));
 		const produtosValidos = produtos.filter((produto) => Array.isArray(produto.imagens) && produto.imagens.length > 0);
 		if (produtosValidos.length === 0) {
@@ -437,6 +437,5 @@ onAuthStateChanged(auth, async (usuario) => {
 		atualizarStatusOferta({ ativa: false, valor: 0, categoria: "Todas" });
 	});
 
-	await renderizarVitrine();
 	return unsubscribeOferta;
 });
