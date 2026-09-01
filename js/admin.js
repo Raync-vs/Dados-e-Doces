@@ -13,7 +13,8 @@ import {
 	getDoc,
 	getDocs,
 	getFirestore,
-	setDoc
+	setDoc,
+	updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -32,9 +33,6 @@ const db = getFirestore(app);
 const loginSection = document.querySelector("#login-section");
 const adminSection = document.querySelector("#admin-section");
 const loginForm = document.querySelector("#login-form");
-const promoForm = document.querySelector("#promo-form");
-const promoActive = document.querySelector("#promo-active");
-const promoDiscount = document.querySelector("#promo-discount");
 const productForm = document.querySelector("#product-form");
 const categoryForm = document.querySelector("#category-form");
 const categoryInput = document.querySelector("#new-category");
@@ -162,13 +160,34 @@ function criarCardAdmin(produto) {
 	titulo.textContent = produto.nome;
 	const preco = document.createElement("p");
 	preco.className = "price-label";
-	preco.textContent = formatarPreco(produto.preco);
+	preco.textContent = formatarPreco(Math.max(0, Number(produto.preco) - (Number(produto.desconto) || 0)));
+
+	const quickDiscountWrap = document.createElement("div");
+	quickDiscountWrap.className = "quick-discount-wrap";
+	const quickDiscountInput = document.createElement("input");
+	quickDiscountInput.type = "number";
+	quickDiscountInput.min = "0";
+	quickDiscountInput.step = "1";
+	quickDiscountInput.value = String(Number(produto.desconto) || 0);
+	quickDiscountInput.className = "quick-discount";
+	const quickDiscountButton = document.createElement("button");
+	quickDiscountButton.type = "button";
+	quickDiscountButton.className = "discount-btn";
+	quickDiscountButton.textContent = "Aplicar";
+	quickDiscountButton.addEventListener("click", async () => {
+		await updateDoc(doc(db, "produtos", produto.id), {
+			desconto: Number(quickDiscountInput.value) || 0
+		});
+		await renderizarVitrine();
+	});
+	quickDiscountWrap.append(quickDiscountInput, quickDiscountButton);
+
 	const deletar = document.createElement("button");
 	deletar.className = "delete-button";
 	deletar.type = "button";
 	deletar.textContent = "Deletar";
 	deletar.addEventListener("click", () => deletarProduto(produto.id, produto.nome, deletar));
-	conteudo.append(categoria, titulo, preco, deletar);
+	conteudo.append(categoria, titulo, preco, quickDiscountWrap, deletar);
 	artigo.append(imagemWrap, conteudo);
 	return artigo;
 }
@@ -224,35 +243,6 @@ loginForm.addEventListener("submit", async (evento) => {
 		loginFeedback.textContent = "Não foi possível entrar. Confira o e-mail e a senha.";
 	} finally {
 		setLoading(loginForm, false);
-	}
-});
-
-promoForm.addEventListener("submit", async (evento) => {
-	evento.preventDefault();
-	const botaoSubmit = promoForm.querySelector("button[type=submit]");
-	botaoSubmit.disabled = true;
-	botaoSubmit.textContent = "Salvando...";
-
-	const desconto = Number(promoDiscount.value);
-	if (!Number.isInteger(desconto) || desconto < 1 || desconto > 99) {
-		alert("O desconto deve ser um número inteiro entre 1 e 99%.");
-		botaoSubmit.disabled = false;
-		botaoSubmit.textContent = "Salvar Configuração";
-		return;
-	}
-
-	try {
-		await setDoc(doc(db, "loja", "configuracao"), {
-			promocaoAtiva: promoActive.checked,
-			desconto: Math.trunc(desconto)
-		}, { merge: true });
-		alert("Configuração salva com sucesso!");
-	} catch (erro) {
-		alert("Não foi possível salvar a configuração. Tente novamente.");
-		console.error("Erro ao salvar configuração da promoção:", erro);
-	} finally {
-		botaoSubmit.disabled = false;
-		botaoSubmit.textContent = "Salvar Configuração";
 	}
 });
 
@@ -326,6 +316,7 @@ productForm.addEventListener("submit", async (evento) => {
 			nome: dados.get("nome").trim(),
 			categoria: dados.get("categoria"),
 			preco: Number(dados.get("preco")),
+			desconto: Number(dados.get("desconto")) || 0,
 			descricao: dados.get("descricao").trim(),
 			imagens
 		});
@@ -364,8 +355,6 @@ onAuthStateChanged(auth, async (usuario) => {
 	const configuracao = await getDoc(doc(db, "loja", "configuracao"));
 	if (configuracao.exists()) {
 		const dadosConfiguracao = configuracao.data();
-		promoActive.checked = Boolean(dadosConfiguracao.promocaoAtiva);
-		promoDiscount.value = Number.isInteger(dadosConfiguracao.desconto) ? String(dadosConfiguracao.desconto) : "";
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas(dadosConfiguracao));
 	} else {
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas({}));

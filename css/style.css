@@ -386,6 +386,29 @@ h1 span {
 	color: var(--muted);
 }
 
+.quick-discount-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.quick-discount {
+	flex: 1;
+	min-width: 0;
+}
+
+.discount-btn {
+	padding: 8px 10px;
+	color: var(--cream);
+	font: inherit;
+	font-size: 0.7rem;
+	font-weight: 800;
+	background: var(--teal);
+	border: 2px solid var(--line);
+	cursor: pointer;
+}
+
 .buy-button,
 .remove-button,
 .submit-button {
@@ -839,6 +862,29 @@ textarea:focus {
 
 .admin-product-card .product-content h3 {
 	font-size: 1.25rem;
+}
+
+.quick-discount-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.quick-discount {
+	flex: 1;
+	min-width: 0;
+}
+
+.discount-btn {
+	padding: 8px 10px;
+	color: var(--cream);
+	font: inherit;
+	font-size: 0.7rem;
+	font-weight: 800;
+	background: var(--teal);
+	border: 2px solid var(--line);
+	cursor: pointer;
 }
 
 .delete-button {

@@ -19,7 +19,7 @@ const db = getFirestore(app);
 let produtos = [];
 let categoriaAtiva = "Cookie";
 let carrinho = JSON.parse(localStorage.getItem("dadosEdoces_carrinho")) || [];
-let configLoja = { promocaoAtiva: false, desconto: 0 };
+let categoriasLoja = ["Cookie", "Brownie"];
 
 const listaProdutos = document.querySelector("#lista-produtos");
 const containerCategorias = document.querySelector(".category-tabs");
@@ -36,12 +36,8 @@ function formatarPreco(preco) {
 	});
 }
 
-function calcularPrecoAtual(precoBase) {
-	if (configLoja.promocaoAtiva) {
-		return precoBase * (1 - configLoja.desconto / 100);
-	}
-
-	return precoBase;
+function calcularPrecoAtual(precoBase, desconto = 0) {
+	return Math.max(0.01, Number(precoBase) - Number(desconto || 0));
 }
 
 function criarTag(texto) {
@@ -133,7 +129,7 @@ function criarCard(produto) {
 	const tags = document.createElement("div");
 	tags.className = "product-tags";
 	const tagsProduto = [...(produto.tags || [produto.categoria === "Brownie" ? "Buff de Glicose" : "Mordida Crítica"])];
-	if (configLoja.promocaoAtiva) {
+	if (Number(produto.desconto) > 0) {
 		tagsProduto.push("Promoção");
 	}
 	tagsProduto.forEach((tag) => {
@@ -144,13 +140,14 @@ function criarCard(produto) {
 	rodape.className = "product-footer";
 
 	const precos = document.createElement("div");
+	const precoFinal = Math.max(0.01, Number(produto.preco) - (Number(produto.desconto) || 0));
+	const precoOriginal = document.createElement("span");
+	precoOriginal.className = "price-original";
+	precoOriginal.textContent = formatarPreco(Number(produto.preco));
 	const preco = document.createElement("span");
 	preco.className = "price-label";
-	preco.textContent = formatarPreco(calcularPrecoAtual(produto.preco));
-	if (configLoja.promocaoAtiva) {
-		const precoOriginal = document.createElement("span");
-		precoOriginal.className = "price-original";
-		precoOriginal.textContent = formatarPreco(produto.preco);
+	preco.textContent = formatarPreco(precoFinal);
+	if (Number(produto.desconto) > 0) {
 		precos.append(precoOriginal);
 	}
 	precos.append(preco);
@@ -175,8 +172,8 @@ function renderizarAbasCategorias() {
 		return;
 	}
 
-	const categorias = Array.isArray(configLoja.categorias) && configLoja.categorias.length > 0
-		? configLoja.categorias
+	const categorias = Array.isArray(categoriasLoja) && categoriasLoja.length > 0
+		? categoriasLoja
 		: ["Cookie", "Brownie"];
 
 	if (!categorias.includes(categoriaAtiva)) {
@@ -249,7 +246,10 @@ function alterarQuantidade(produtoId, variacao) {
 function renderizarCarrinho() {
 	itensCarrinho.replaceChildren();
 	const quantidadeTotal = carrinho.reduce((total, item) => total + item.quantidade, 0);
-	const valorTotal = carrinho.reduce((total, item) => total + calcularPrecoAtual(item.produto.preco) * item.quantidade, 0);
+	const valorTotal = carrinho.reduce((total, item) => {
+		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0));
+		return total + precoFinal * item.quantidade;
+	}, 0);
 	contadorCarrinho.textContent = quantidadeTotal;
 	totalCarrinho.textContent = formatarPreco(valorTotal);
 	botaoPedido.disabled = carrinho.length === 0;
@@ -273,7 +273,8 @@ function renderizarCarrinho() {
 		nome.textContent = item.produto.nome;
 
 		const preco = document.createElement("span");
-		preco.textContent = `${formatarPreco(calcularPrecoAtual(item.produto.preco))} cada`;
+		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0));
+		preco.textContent = `${formatarPreco(precoFinal)} cada`;
 		informacoes.append(nome, preco);
 
 		const controles = document.createElement("div");
@@ -308,11 +309,14 @@ function realizarPedido() {
 	}
 
 	const linhas = carrinho.map((item) => {
-		const precoAtual = calcularPrecoAtual(item.produto.preco);
-		const subtotal = precoAtual * item.quantidade;
-		return `- ${item.quantidade}x ${item.produto.nome}: ${formatarPreco(precoAtual)} cada | Subtotal: ${formatarPreco(subtotal)}`;
+		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0));
+		const subtotal = precoFinal * item.quantidade;
+		return `- ${item.quantidade}x ${item.produto.nome}: ${formatarPreco(precoFinal)} cada | Subtotal: ${formatarPreco(subtotal)}`;
 	});
-	const total = carrinho.reduce((soma, item) => soma + calcularPrecoAtual(item.produto.preco) * item.quantidade, 0);
+	const total = carrinho.reduce((soma, item) => {
+		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0));
+		return soma + precoFinal * item.quantidade;
+	}, 0);
 	const mensagem = [
 		"Olá! Gostaria de realizar este pedido:",
 		"",
@@ -345,17 +349,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 
 	onSnapshot(doc(db, "loja", "configuracao"), (snapshot) => {
-		configLoja = {
-			promocaoAtiva: false,
-			desconto: 0,
-			categorias: ["Cookie", "Brownie"],
-			...(snapshot.exists() ? snapshot.data() : {})
-		};
+		categoriasLoja = Array.isArray(snapshot.data()?.categorias) && snapshot.data().categorias.length > 0
+			? snapshot.data().categorias
+			: ["Cookie", "Brownie"];
 		renderizarAbasCategorias();
 		renderizarProdutos();
 		renderizarCarrinho();
 	}, (erro) => {
-		configLoja = { promocaoAtiva: false, desconto: 0, categorias: ["Cookie", "Brownie"] };
+		categoriasLoja = ["Cookie", "Brownie"];
 		renderizarAbasCategorias();
 		renderizarProdutos();
 		renderizarCarrinho();
