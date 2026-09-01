@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Painel administrativo Dados & Doces.">
+	<title>Dados &amp; Doces | Administração</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lobster&family=Pacifico&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="../.css/style.css">
+</head>
+<body class="admin-page">
+	<header class="site-header">
+		<div class="header-inner">
+			<div>
+				<p class="eyebrow">Dados &amp; Doces</p>
+				<h1>Administração</h1>
+			</div>
+			<a class="admin-back-link" href="../index.html">Voltar à vitrine</a>
+		</div>
+	</header>
+
+	<main class="admin-page-shell">
+		<section id="login-section" class="admin-section admin-login-section" aria-labelledby="login-title">
+			<div class="panel-heading">
+				<div>
+					<p class="eyebrow">Acesso restrito</p>
+					<h2 id="login-title">Entrar na taverna</h2>
+				</div>
+			</div>
+			<p class="panel-intro">Use suas credenciais para gerenciar o cardápio.</p>
+
+			<form id="login-form">
+				<div class="form-field">
+					<label for="login-email">E-mail</label>
+					<input type="email" id="login-email" name="email" autocomplete="email" required>
+				</div>
+				<div class="form-field">
+					<label for="login-password">Senha</label>
+					<input type="password" id="login-password" name="password" autocomplete="current-password" required>
+				</div>
+				<button class="submit-button" type="submit">Entrar na Taverna</button>
+				<p id="login-feedback" class="form-feedback" role="alert" aria-live="polite"></p>
+			</form>
+		</section>
+
+		<section id="admin-section" class="admin-section admin-dashboard" aria-labelledby="admin-title" hidden>
+			<div class="panel-heading">
+				<div>
+					<p class="eyebrow">Gerenciamento</p>
+					<h2 id="admin-title">Painel Admin</h2>
+				</div>
+				<button id="logout-button" class="admin-close" type="button">Sair</button>
+			</div>
+			<div class="admin-dashboard-grid">
+				<div class="admin-form-column">
+					<section class="promo-panel" aria-labelledby="promo-title">
+						<div class="promo-panel-heading">
+							<p class="eyebrow">Configuração global</p>
+							<h3 id="promo-title">Desconto da loja</h3>
+						</div>
+						<form id="promo-form">
+							<label class="promo-toggle" for="promo-active">
+								<input type="checkbox" id="promo-active">
+								<span>Ativar Promoção Global</span>
+							</label>
+							<div class="form-field">
+								<label for="promo-discount">Desconto (%)</label>
+								<input type="number" id="promo-discount" min="1" max="99" step="1" inputmode="numeric" required>
+							</div>
+							<button class="submit-button" type="submit">Salvar Configuração</button>
+						</form>
+					</section>
+					<section class="promo-panel" aria-labelledby="category-title">
+						<div class="promo-panel-heading">
+							<p class="eyebrow">Categorias</p>
+							<h3 id="category-title">Adicionar categoria</h3>
+						</div>
+						<form id="category-form">
+							<div class="form-field">
+								<label for="new-category">Nova categoria</label>
+								<input type="text" id="new-category" name="novaCategoria" maxlength="30" placeholder="Ex.: Cupcake" required>
+							</div>
+							<button class="submit-button" type="submit">Adicionar categoria</button>
+						</form>
+					</section>
+					<p class="panel-intro">Cadastre um novo produto para exibi-lo no cardápio.</p>
+					<form id="product-form">
+						<div class="form-field">
+							<label for="product-name">Nome</label>
+							<input type="text" id="product-name" name="nome" required>
+						</div>
+						<div class="form-row">
+							<div class="form-field">
+								<label for="product-category">Categoria</label>
+								<select id="product-category" name="categoria" required>
+									<option value="" selected disabled>Escolha uma categoria</option>
+									<option value="Brownie">Brownie</option>
+									<option value="Cookie">Cookie</option>
+								</select>
+							</div>
+							<div class="form-field">
+								<label for="product-price">Preço (R$)</label>
+								<input type="number" id="product-price" name="preco" min="0.01" step="0.01" required>
+							</div>
+						</div>
+						<div class="form-field">
+							<label for="imagens-upload">Imagens do produto</label>
+							<input type="file" id="imagens-upload" name="imagens-upload" accept="image/*" multiple required>
+						</div>
+						<div class="form-field">
+							<label for="product-description">Descrição</label>
+							<textarea id="product-description" name="descricao" rows="5" required></textarea>
+						</div>
+						<button class="submit-button" type="submit">Salvar Loot</button>
+					</form>
+				</div>
+				<div class="admin-vitrine-column">
+					<div class="admin-vitrine-heading">
+						<div>
+							<p class="eyebrow">Acompanhamento</p>
+							<h3>Vitrine atual</h3>
+						</div>
+						<span id="vitrine-status" class="form-feedback" role="status" aria-live="polite"></span>
+					</div>
+					<div id="admin-vitrine" class="product-grid" aria-live="polite"></div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<p>Dados &amp; Doces</p>
+	</footer>
+
+	<script type="module" src="../.js/admin.js"></script>
+</body>
+</html>

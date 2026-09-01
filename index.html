@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Dados & Doces: brownies e cookies com buffs para sua próxima aventura.">
+	<title>Dados &amp; Doces | Vitrine de Brownies e Cookies</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lobster&family=Pacifico&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href=".css/style.css">
+</head>
+<body>
+	<header class="site-header">
+		<div class="header-inner">
+			<div class="brand-lockup">
+				<img
+					class="brand-die"
+					src="Artes/logoDoce2.jpeg"
+					alt="Dado de 20 faces"
+				>
+				<div>
+					<h1>Dados <span>&amp;</span> Doces</h1>
+				</div>
+			</div>
+			<div class="header-copy">
+				<p>Brownies e cookies artesanais</p>
+			</div>
+		</div>
+	</header>
+
+	<div class="page-shell">
+		<main id="vitrine">
+			<div class="section-heading">
+				<div class="category-tabs" role="tablist" aria-label="Categorias de produtos">
+					<button class="category-tab is-active" type="button" role="tab" aria-selected="true" data-category="Cookie">Cookies</button>
+					<button class="category-tab" type="button" role="tab" aria-selected="false" data-category="Brownie">Brownies</button>
+				</div>
+			</div>
+			<div id="lista-produtos" class="product-grid" aria-live="polite"></div>
+		</main>
+
+		<aside class="cart-panel" aria-labelledby="cart-title">
+			<div class="cart-heading">
+				<div>
+					<p class="eyebrow">Seu pedido</p>
+					<h2 id="cart-title">Carrinho</h2>
+				</div>
+				<span id="cart-count" class="cart-count" aria-live="polite">0</span>
+			</div>
+			<div id="cart-items" class="cart-items" aria-live="polite">
+				<p class="cart-empty">Seu carrinho está vazio.</p>
+			</div>
+			<div class="cart-summary">
+				<div class="cart-total-row">
+					<span>Total</span>
+					<strong id="cart-total">R$ 0,00</strong>
+				</div>
+				<button id="checkout-button" class="checkout-button" type="button" disabled>Realizar pedido</button>
+				<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite"></p>
+			</div>
+		</aside>
+
+	</div>
+	<footer class="site-footer">
+		<p>Feito para aventureiros com fome &bull; Dados &amp; Doces</p>
+	</footer>
+
+	<script type="module" src=".js/script.js"></script>
+</body>
+</html>
