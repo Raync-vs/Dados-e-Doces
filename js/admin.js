@@ -37,6 +37,7 @@ const promoForm = document.querySelector("#promo-form");
 const promoActive = document.querySelector("#promo-active");
 const promoValue = document.querySelector("#promo-value");
 const promoCategory = document.querySelector("#promo-category");
+const promoStatusText = document.querySelector("#promo-status-text");
 const productForm = document.querySelector("#product-form");
 const categoryForm = document.querySelector("#category-form");
 const categoryInput = document.querySelector("#new-category");
@@ -89,6 +90,23 @@ function formatarPreco(preco) {
 		style: "currency",
 		currency: "BRL"
 	});
+}
+
+function atualizarStatusOferta(dadosConfiguracao = {}) {
+	if (!promoStatusText) {
+		return;
+	}
+
+	const ativa = Boolean(dadosConfiguracao.ativa);
+	const valor = Number(dadosConfiguracao.valor) || 0;
+	const categoria = dadosConfiguracao.categoria || "Todas";
+
+	if (!ativa) {
+		promoStatusText.textContent = "Oferta inativa";
+		return;
+	}
+
+	promoStatusText.textContent = `Ativa: ${formatarPreco(valor)} em ${categoria}`;
 }
 
 function criarCardAdmin(produto) {
@@ -245,6 +263,11 @@ promoForm.addEventListener("submit", async (evento) => {
 			valor: Number(promoValue.value),
 			categoria: promoCategory.value
 		}, { merge: true });
+		atualizarStatusOferta({
+			ativa: promoActive.checked,
+			valor: Number(promoValue.value),
+			categoria: promoCategory.value
+		});
 		alert("Oferta salva com sucesso!");
 	} catch (erro) {
 		alert("Não foi possível salvar a oferta. Tente novamente.");
@@ -384,13 +407,27 @@ onAuthStateChanged(auth, async (usuario) => {
 		promoActive.checked = Boolean(dadosConfiguracao.ativa);
 		promoValue.value = Number.isFinite(Number(dadosConfiguracao.valor)) ? String(Number(dadosConfiguracao.valor)) : "0";
 		promoCategory.value = ["Todas", "Brownie", "Cookie"].includes(dadosConfiguracao.categoria) ? dadosConfiguracao.categoria : "Todas";
+		atualizarStatusOferta(dadosConfiguracao);
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas(dadosConfiguracao));
 	} else {
 		promoActive.checked = false;
 		promoValue.value = "0";
 		promoCategory.value = "Todas";
+		atualizarStatusOferta({ ativa: false, valor: 0, categoria: "Todas" });
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas({}));
 	}
 
+	const unsubscribeOferta = onSnapshot(doc(db, "loja", "configuracao"), (snapshot) => {
+		const dadosConfiguracao = snapshot.exists() ? snapshot.data() : { ativa: false, valor: 0, categoria: "Todas" };
+		promoActive.checked = Boolean(dadosConfiguracao.ativa);
+		promoValue.value = Number.isFinite(Number(dadosConfiguracao.valor)) ? String(Number(dadosConfiguracao.valor)) : "0";
+		promoCategory.value = ["Todas", "Brownie", "Cookie"].includes(dadosConfiguracao.categoria) ? dadosConfiguracao.categoria : "Todas";
+		atualizarStatusOferta(dadosConfiguracao);
+	}, (erro) => {
+		console.error("Erro ao acompanhar oferta global:", erro);
+		atualizarStatusOferta({ ativa: false, valor: 0, categoria: "Todas" });
+	});
+
 	await renderizarVitrine();
+	return unsubscribeOferta;
 });
