@@ -68,6 +68,31 @@
 							<button class="submit-button" type="submit">Adicionar categoria</button>
 						</form>
 					</section>
+					<section class="promo-panel" aria-labelledby="promo-title">
+						<div class="promo-panel-heading">
+							<p class="eyebrow">Oferta global</p>
+							<h3 id="promo-title">Desconto fixo por categoria</h3>
+						</div>
+						<form id="promo-form">
+							<label class="promo-toggle" for="promo-active">
+								<input type="checkbox" id="promo-active">
+								<span>Ativar Oferta Global</span>
+							</label>
+							<div class="form-field">
+								<label for="promo-value">Desconto Fixo (R$)</label>
+								<input type="number" id="promo-value" min="0" step="1" value="0">
+							</div>
+							<div class="form-field">
+								<label for="promo-category">Categoria</label>
+								<select id="promo-category">
+									<option value="Todas" selected>Todas</option>
+									<option value="Brownie">Brownie</option>
+									<option value="Cookie">Cookie</option>
+								</select>
+							</div>
+							<button class="submit-button" type="submit">Salvar Oferta</button>
+						</form>
+					</section>
 					<p class="panel-intro">Cadastre um novo produto para exibi-lo no cardápio.</p>
 					<form id="product-form">
 						<div class="form-field">

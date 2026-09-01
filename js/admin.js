@@ -33,6 +33,10 @@ const db = getFirestore(app);
 const loginSection = document.querySelector("#login-section");
 const adminSection = document.querySelector("#admin-section");
 const loginForm = document.querySelector("#login-form");
+const promoForm = document.querySelector("#promo-form");
+const promoActive = document.querySelector("#promo-active");
+const promoValue = document.querySelector("#promo-value");
+const promoCategory = document.querySelector("#promo-category");
 const productForm = document.querySelector("#product-form");
 const categoryForm = document.querySelector("#category-form");
 const categoryInput = document.querySelector("#new-category");
@@ -229,6 +233,28 @@ async function deletarProduto(produtoId, nomeProduto, botao) {
 	}
 }
 
+promoForm.addEventListener("submit", async (evento) => {
+	evento.preventDefault();
+	const botaoSubmit = promoForm.querySelector("button[type=submit]");
+	botaoSubmit.disabled = true;
+	botaoSubmit.textContent = "Salvando...";
+
+	try {
+		await setDoc(doc(db, "loja", "configuracao"), {
+			ativa: promoActive.checked,
+			valor: Number(promoValue.value),
+			categoria: promoCategory.value
+		}, { merge: true });
+		alert("Oferta salva com sucesso!");
+	} catch (erro) {
+		alert("Não foi possível salvar a oferta. Tente novamente.");
+		console.error("Erro ao salvar oferta global:", erro);
+	} finally {
+		botaoSubmit.disabled = false;
+		botaoSubmit.textContent = "Salvar Oferta";
+	}
+});
+
 loginForm.addEventListener("submit", async (evento) => {
 	evento.preventDefault();
 	loginFeedback.textContent = "";
@@ -355,8 +381,14 @@ onAuthStateChanged(auth, async (usuario) => {
 	const configuracao = await getDoc(doc(db, "loja", "configuracao"));
 	if (configuracao.exists()) {
 		const dadosConfiguracao = configuracao.data();
+		promoActive.checked = Boolean(dadosConfiguracao.ativa);
+		promoValue.value = Number.isFinite(Number(dadosConfiguracao.valor)) ? String(Number(dadosConfiguracao.valor)) : "0";
+		promoCategory.value = ["Todas", "Brownie", "Cookie"].includes(dadosConfiguracao.categoria) ? dadosConfiguracao.categoria : "Todas";
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas(dadosConfiguracao));
 	} else {
+		promoActive.checked = false;
+		promoValue.value = "0";
+		promoCategory.value = "Todas";
 		atualizarOpcoesCategoria(obterCategoriasConfiguradas({}));
 	}
 
