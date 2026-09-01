@@ -13,6 +13,7 @@ import {
 	getDoc,
 	getDocs,
 	getFirestore,
+	onSnapshot,
 	setDoc,
 	updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -180,9 +181,16 @@ function criarCardAdmin(produto) {
 	categoria.textContent = produto.categoria;
 	const titulo = document.createElement("h3");
 	titulo.textContent = produto.nome;
+	const ofertaAtiva = document.querySelector("#promo-active").checked;
+	const ofertaValor = Number(document.querySelector("#promo-value").value) || 0;
+	const ofertaCategoria = document.querySelector("#promo-category").value;
+	let descontoGlobal = 0;
+	if (ofertaAtiva && (ofertaCategoria === "Todas" || ofertaCategoria === produto.categoria)) {
+		descontoGlobal = ofertaValor;
+	}
 	const preco = document.createElement("p");
 	preco.className = "price-label";
-	preco.textContent = formatarPreco(Math.max(0, Number(produto.preco) - (Number(produto.desconto) || 0)));
+	preco.textContent = formatarPreco(Math.max(0, Number(produto.preco) - (Number(produto.desconto) || 0) - descontoGlobal));
 
 	const quickDiscountWrap = document.createElement("div");
 	quickDiscountWrap.className = "quick-discount-wrap";
@@ -423,6 +431,7 @@ onAuthStateChanged(auth, async (usuario) => {
 		promoValue.value = Number.isFinite(Number(dadosConfiguracao.valor)) ? String(Number(dadosConfiguracao.valor)) : "0";
 		promoCategory.value = ["Todas", "Brownie", "Cookie"].includes(dadosConfiguracao.categoria) ? dadosConfiguracao.categoria : "Todas";
 		atualizarStatusOferta(dadosConfiguracao);
+		renderizarVitrine();
 	}, (erro) => {
 		console.error("Erro ao acompanhar oferta global:", erro);
 		atualizarStatusOferta({ ativa: false, valor: 0, categoria: "Todas" });
