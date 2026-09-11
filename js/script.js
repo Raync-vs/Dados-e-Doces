@@ -29,6 +29,7 @@ const contadorCarrinho = document.querySelector("#cart-count");
 const totalCarrinho = document.querySelector("#cart-total");
 const botaoPedido = document.querySelector("#checkout-button");
 const feedbackCarrinho = document.querySelector("#cart-feedback");
+const inputNomeCliente = document.querySelector("#customer-name");
 
 function formatarPreco(preco) {
 	return Number(preco).toLocaleString("pt-BR", {
@@ -331,6 +332,12 @@ function realizarPedido() {
 		return;
 	}
 
+	const nomeCliente = inputNomeCliente.value.trim();
+	if (!nomeCliente) {
+		alert("Por favor, informe seu nome antes de realizar o pedido.");
+		return;
+	}
+
 	const linhas = carrinho.map((item) => {
 		let descontoGlobal = 0;
 		if (configOferta.ativa === true && (configOferta.categoria === "Todas" || configOferta.categoria === item.produto.categoria)) {
@@ -349,7 +356,7 @@ function realizarPedido() {
 		return soma + precoFinal * item.quantidade;
 	}, 0);
 	const mensagem = [
-		"Olá! Gostaria de realizar este pedido:",
+		`Olá! Meu nome é *${nomeCliente}* e gostaria de realizar este pedido:`,
 		"",
 		...linhas,
 		"",
@@ -360,6 +367,7 @@ function realizarPedido() {
 	carrinho = [];
 	localStorage.removeItem("dadosEdoces_carrinho");
 	renderizarCarrinho();
+	inputNomeCliente.value = "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {

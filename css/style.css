@@ -593,6 +593,10 @@ h1 span {
 	border-top: 2px solid var(--line);
 }
 
+#customer-name {
+	margin-bottom: 15px;
+}
+
 .cart-total-row {
 	display: flex;
 	align-items: center;
