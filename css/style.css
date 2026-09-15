@@ -157,6 +157,34 @@ h1 span {
 	font-size: 0.85rem;
 }
 
+.order-info-panel {
+	margin: 20px auto;
+	max-width: 800px;
+	padding: 15px 20px;
+	background-color: var(--cream, #FFF3C7);
+	border: 2px solid var(--ink, #2B1E16);
+	border-radius: 8px;
+	box-shadow: 4px 4px 0px var(--ink, #2B1E16);
+}
+
+.order-info-panel h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	font-size: 1.2rem;
+	color: var(--red, #721C24);
+	text-align: center;
+}
+
+.order-info-panel ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-size: 0.9rem;
+}
+
 .page-shell {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 280px;
@@ -947,6 +975,14 @@ textarea:focus {
 	text-align: center;
 	background: var(--red);
 	border-top: 3px solid var(--mustard);
+}
+
+@media (min-width: 768px) {
+	.order-info-panel ul {
+		flex-direction: row;
+		justify-content: space-between;
+		gap: 20px;
+	}
 }
 
 @media (max-width: 900px) {
