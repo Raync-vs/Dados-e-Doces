@@ -221,9 +221,9 @@ function renderizarProdutos() {
 	const produtosFiltrados = produtos.filter((produto) => produto.categoria === categoriaAtiva);
 
 	if (produtosFiltrados.length === 0) {
-		const vazio = document.createElement("p");
-		vazio.className = "empty-state";
-		vazio.textContent = "Nenhum produto cadastrado nesta categoria.";
+		const vazio = document.createElement("div");
+		vazio.className = "category-empty-state";
+		vazio.innerHTML = "<h3>Novidades a caminho!</h3><p>Esta categoria está se preparando para o show. Em breve novos loots estarão disponíveis por aqui.</p>";
 		listaProdutos.append(vazio);
 		return;
 	}

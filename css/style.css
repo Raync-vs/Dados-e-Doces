@@ -783,13 +783,25 @@ textarea:focus {
 	text-align: center;
 }
 
-.empty-state {
+.category-empty-state {
 	grid-column: 1 / -1;
-	padding: 45px 20px;
-	color: var(--muted);
+	padding: 48px 24px;
+	color: var(--ink, #2B1E16);
 	text-align: center;
-	background: var(--paper);
-	border: 3px dashed var(--line);
+	background: var(--cream, #FFF3C7);
+	border: 3px dashed var(--ink, #2B1E16);
+	box-shadow: 4px 4px 0px var(--ink, #2B1E16);
+}
+
+.category-empty-state h3 {
+	margin-bottom: 12px;
+	font-size: 1.5rem;
+}
+
+.category-empty-state p {
+	max-width: 560px;
+	margin: 0 auto;
+	line-height: 1.6;
 }
 
 .admin-page-shell {
