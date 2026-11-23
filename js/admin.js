@@ -48,10 +48,101 @@ const logoutButton = document.querySelector("#logout-button");
 const loginFeedback = document.querySelector("#login-feedback");
 const adminVitrine = document.querySelector("#admin-vitrine");
 const vitrineStatus = document.querySelector("#vitrine-status");
+const compositionsList = document.querySelector("#compositions-list");
+const addCompositionButton = document.querySelector("#add-composition-button");
+
+let produtoEmEdicaoId = null;
+let produtoEmEdicao = null;
+let proximoIdDescricaoComposicao = 0;
+
+function adicionarLinhaComposicao(nome = "", preco = "", descricao = "") {
+	const linha = document.createElement("div");
+	linha.className = "composition-row";
+
+	const campoNome = document.createElement("div");
+	campoNome.className = "form-field";
+	const labelNome = document.createElement("label");
+	labelNome.textContent = "Nome da opção";
+	const inputNome = document.createElement("input");
+	inputNome.type = "text";
+	inputNome.className = "composition-name";
+	inputNome.placeholder = 'Ex.: Pequeno';
+	inputNome.maxLength = 40;
+	inputNome.value = nome;
+
+	const campoPreco = document.createElement("div");
+	campoPreco.className = "form-field";
+	const labelPreco = document.createElement("label");
+	labelPreco.textContent = "Preço (R$)";
+	const inputPreco = document.createElement("input");
+	inputPreco.type = "number";
+	inputPreco.className = "composition-price";
+	inputPreco.min = "0.01";
+	inputPreco.step = "0.01";
+	inputPreco.placeholder = "0,00";
+	inputPreco.value = preco;
+
+	const campoDescricao = document.createElement("div");
+	campoDescricao.className = "form-field";
+	const labelDescricao = document.createElement("label");
+	labelDescricao.textContent = "Descrição da opção (opcional)";
+	const inputDescricao = document.createElement("input");
+	inputDescricao.type = "text";
+	inputDescricao.className = "composition-description-input";
+	inputDescricao.id = `composicao-descricao-${proximoIdDescricaoComposicao++}`;
+	labelDescricao.htmlFor = inputDescricao.id;
+	inputDescricao.placeholder = "Ex.: 4 unidades";
+	inputDescricao.value = descricao;
+
+	const remover = document.createElement("button");
+	remover.type = "button";
+	remover.className = "composition-remove-button";
+	remover.textContent = "Remover";
+	remover.addEventListener("click", () => {
+		linha.remove();
+		atualizarObrigatoriedadePreco();
+	});
+
+	campoNome.append(labelNome, inputNome);
+	campoPreco.append(labelPreco, inputPreco);
+	campoDescricao.append(labelDescricao, inputDescricao);
+	linha.append(campoNome, campoPreco, campoDescricao, remover);
+	compositionsList.append(linha);
+	atualizarObrigatoriedadePreco();
+}
+
+function capturarComposicoes() {
+	return Array.from(compositionsList.querySelectorAll(".composition-row"))
+		.map((linha) => {
+			const nome = linha.querySelector(".composition-name").value.trim();
+			const preco = Number(linha.querySelector(".composition-price").value);
+			const descricao = linha.querySelector(".composition-description-input").value.trim();
+			return { nome, preco, descricao };
+		})
+		.filter((composicao) => composicao.nome && Number.isFinite(composicao.preco) && composicao.preco > 0);
+}
+
+function atualizarObrigatoriedadePreco() {
+	const precoPrincipal = document.querySelector("#product-price");
+	precoPrincipal.required = capturarComposicoes().length === 0;
+}
+
+compositionsList.addEventListener("input", atualizarObrigatoriedadePreco);
+
+function limparModoEdicao() {
+	produtoEmEdicaoId = null;
+	produtoEmEdicao = null;
+	compositionsList.replaceChildren();
+	imagensUpload.required = true;
+	productForm.querySelector("button[type=submit]").textContent = "Salvar Loot";
+	atualizarObrigatoriedadePreco();
+}
 
 function setLoading(formulario, estaCarregando) {
 	formulario.querySelector("button[type=submit]").disabled = estaCarregando;
 }
+
+addCompositionButton.addEventListener("click", () => adicionarLinhaComposicao());
 
 function obterCategoriasPadrao() {
 	return ["Cookie", "Brownie"];
@@ -113,6 +204,8 @@ function atualizarStatusOferta(dadosConfiguracao = {}) {
 function criarCardAdmin(produto) {
 	const artigo = document.createElement("article");
 	artigo.className = "product-card admin-product-card";
+	const visivel = produto.visivel !== false;
+	artigo.classList.toggle("is-hidden", !visivel);
 
 	const imagemWrap = document.createElement("div");
 	imagemWrap.className = "product-image-wrap";
@@ -181,6 +274,9 @@ function criarCardAdmin(produto) {
 	categoria.textContent = produto.categoria;
 	const titulo = document.createElement("h3");
 	titulo.textContent = produto.nome;
+	const badgeVisibilidade = document.createElement("span");
+	badgeVisibilidade.className = "visibility-badge";
+	badgeVisibilidade.textContent = "Oculto da vitrine";
 	const ofertaAtiva = document.querySelector("#promo-active").checked;
 	const ofertaValor = Number(document.querySelector("#promo-value").value) || 0;
 	const ofertaCategoria = document.querySelector("#promo-category").value;
@@ -212,12 +308,59 @@ function criarCardAdmin(produto) {
 	});
 	quickDiscountWrap.append(quickDiscountInput, quickDiscountButton);
 
+	const editar = document.createElement("button");
+	editar.className = "edit-button";
+	editar.type = "button";
+	editar.textContent = "Editar";
+	editar.addEventListener("click", () => {
+		produtoEmEdicaoId = produto.id;
+		produtoEmEdicao = produto;
+		document.querySelector("#product-name").value = produto.nome || "";
+		document.querySelector("#product-category").value = produto.categoria || "";
+		document.querySelector("#product-price").value = String(produto.preco || "");
+		document.querySelector("#product-discount").value = String(Number(produto.desconto) || 0);
+		document.querySelector("#product-description").value = produto.descricao || "";
+		compositionsList.replaceChildren();
+		if (Array.isArray(produto.composicoes)) {
+			produto.composicoes.forEach((composicao) => {
+				adicionarLinhaComposicao(composicao.nome || "", composicao.preco ?? "", composicao.descricao || "");
+			});
+		}
+		imagensUpload.required = false;
+		productForm.querySelector("button[type=submit]").textContent = "Atualizar Loot";
+		productForm.scrollIntoView({ behavior: "smooth", block: "start" });
+	});
+
+	const alternarVisibilidade = document.createElement("button");
+	alternarVisibilidade.className = `visibility-button${visivel ? "" : " is-hidden"}`;
+	alternarVisibilidade.type = "button";
+	alternarVisibilidade.textContent = visivel ? "Ocultar da loja" : "Exibir na loja";
+	alternarVisibilidade.addEventListener("click", async () => {
+		alternarVisibilidade.disabled = true;
+		try {
+			await updateDoc(doc(db, "produtos", produto.id), { visivel: !visivel });
+			await renderizarVitrine();
+		} catch (erro) {
+			vitrineStatus.textContent = "Não foi possível atualizar a visibilidade.";
+			console.error("Erro ao atualizar visibilidade do produto:", erro);
+		} finally {
+			alternarVisibilidade.disabled = false;
+		}
+	});
+
 	const deletar = document.createElement("button");
 	deletar.className = "delete-button";
 	deletar.type = "button";
 	deletar.textContent = "Deletar";
 	deletar.addEventListener("click", () => deletarProduto(produto.id, produto.nome, deletar));
-	conteudo.append(categoria, titulo, preco, quickDiscountWrap, deletar);
+	const acoesProduto = document.createElement("div");
+	acoesProduto.className = "admin-product-actions";
+	acoesProduto.append(editar, deletar, alternarVisibilidade);
+	conteudo.append(categoria);
+	if (!visivel) {
+		conteudo.append(badgeVisibilidade);
+	}
+	conteudo.append(titulo, preco, quickDiscountWrap, acoesProduto);
 	artigo.append(imagemWrap, conteudo);
 	return artigo;
 }
@@ -347,40 +490,82 @@ productForm.addEventListener("submit", async (evento) => {
 	const botaoSubmit = productForm.querySelector("button[type=submit]");
 	const dados = new FormData(productForm);
 	const arquivos = Array.from(imagensUpload.files);
+	const composicoes = capturarComposicoes();
+	const linhasComposicao = Array.from(compositionsList.querySelectorAll(".composition-row"));
+	const composicoesIncompletas = linhasComposicao.some((linha) => {
+		const nome = linha.querySelector(".composition-name").value.trim();
+		const preco = Number(linha.querySelector(".composition-price").value);
+		return !nome || !Number.isFinite(preco) || preco <= 0;
+	});
+
+	if (composicoesIncompletas) {
+		alert("Preencha o nome e um preço válido em todas as opções ou remova as opções incompletas.");
+		return;
+	}
+
+	const precoPrincipal = document.querySelector("#product-price");
+	if (composicoes.length === 0) {
+		const precoInformado = Number(dados.get("preco"));
+		if (!Number.isFinite(precoInformado) || precoInformado <= 0) {
+			precoPrincipal.required = true;
+			precoPrincipal.focus();
+			precoPrincipal.reportValidity();
+			return;
+		}
+	} else {
+		precoPrincipal.required = false;
+	}
+
+	const precoBase = composicoes.length > 0
+		? Math.min(...composicoes.map((composicao) => composicao.preco))
+		: Number(dados.get("preco"));
+
 	botaoSubmit.disabled = true;
-	botaoSubmit.textContent = "Fazendo upload...";
+	botaoSubmit.textContent = produtoEmEdicaoId ? "Atualizando..." : "Fazendo upload...";
 
 	try {
-		const imagens = await Promise.all(arquivos.map(async (arquivo) => {
-			const formDataImgBB = new FormData();
-			formDataImgBB.append("key", "15384525cce834d491f7b2517bce2000");
-			formDataImgBB.append("image", arquivo);
-			const resposta = await fetch("https://api.imgbb.com/1/upload", {
-				method: "POST",
-				body: formDataImgBB
-			});
-			if (!resposta.ok) {
-				throw new Error(`Falha no upload da imagem: ${resposta.status}`);
-			}
-			const json = await resposta.json();
-			if (!json.data?.url) {
-				throw new Error("O ImgBB não retornou uma URL válida.");
-			}
-			return json.data.url;
-		}));
+		const imagens = arquivos.length > 0
+			? await Promise.all(arquivos.map(async (arquivo) => {
+				const formDataImgBB = new FormData();
+				formDataImgBB.append("key", "15384525cce834d491f7b2517bce2000");
+				formDataImgBB.append("image", arquivo);
+				const resposta = await fetch("https://api.imgbb.com/1/upload", {
+					method: "POST",
+					body: formDataImgBB
+				});
+				if (!resposta.ok) {
+					throw new Error(`Falha no upload da imagem: ${resposta.status}`);
+				}
+				const json = await resposta.json();
+				if (!json.data?.url) {
+					throw new Error("O ImgBB não retornou uma URL válida.");
+				}
+				return json.data.url;
+			}))
+			: (produtoEmEdicao?.imagens || (produtoEmEdicao?.imagem ? [produtoEmEdicao.imagem] : []));
 
-		await addDoc(collection(db, "produtos"), {
+		const dadosProduto = {
 			nome: dados.get("nome").trim(),
 			categoria: dados.get("categoria"),
-			preco: Number(dados.get("preco")),
+			preco: precoBase,
 			desconto: Number(dados.get("desconto")) || 0,
 			descricao: dados.get("descricao").trim(),
+			visivel: produtoEmEdicao?.visivel !== false,
+			composicoes,
 			imagens
-		});
+		};
 
+		if (produtoEmEdicaoId) {
+			await updateDoc(doc(db, "produtos", produtoEmEdicaoId), dadosProduto);
+		} else {
+			await addDoc(collection(db, "produtos"), dadosProduto);
+		}
+
+		const atualizouProduto = Boolean(produtoEmEdicaoId);
 		productForm.reset();
+		limparModoEdicao();
 		await renderizarVitrine();
-		alert("Loot salvo com sucesso!");
+		alert(atualizouProduto ? "Loot atualizado com sucesso!" : "Loot salvo com sucesso!");
 	} catch (erro) {
 		alert("Não foi possível salvar o produto. Tente novamente.");
 	} finally {
@@ -404,6 +589,7 @@ onAuthStateChanged(auth, async (usuario) => {
 
 	if (!estaAutenticado) {
 		productForm.reset();
+		limparModoEdicao();
 		adminVitrine.replaceChildren();
 		vitrineStatus.textContent = "";
 		return;

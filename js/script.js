@@ -50,6 +50,20 @@ function obterDescontoGlobal(produto) {
 	return descontoGlobal;
 }
 
+function obterPrecoBaseItem(item) {
+	if (item.composicao && Number.isFinite(Number(item.composicao.preco))) {
+		return Number(item.composicao.preco);
+	}
+	return Number(item.produto.preco);
+}
+
+function calcularPrecoItem(item) {
+	const precoBase = obterPrecoBaseItem(item);
+	const descontoIndividual = Number(item.produto.desconto) || 0;
+	const descontoGlobal = obterDescontoGlobal(item.produto);
+	return Math.max(0.01, precoBase - descontoIndividual - descontoGlobal);
+}
+
 function criarTag(texto) {
 	const tag = document.createElement("span");
 	tag.className = "tag";
@@ -152,33 +166,99 @@ function criarCard(produto) {
 		tags.append(criarTag(tag));
 	});
 
+	let composicaoSelecionada = null;
+	const temComposicoes = Array.isArray(produto.composicoes) && produto.composicoes.length > 0;
+	let seletorComposicoes = null;
+	let composicoesValidas = [];
+	if (temComposicoes) {
+		composicoesValidas = produto.composicoes.filter((composicao) =>
+			composicao &&
+			String(composicao.nome || "").trim() &&
+			Number.isFinite(Number(composicao.preco)) &&
+			Number(composicao.preco) > 0
+		).map((composicao) => ({
+			nome: String(composicao.nome).trim(),
+			preco: Number(composicao.preco),
+			descricao: String(composicao.descricao || "").trim()
+		}));
+
+		if (composicoesValidas.length > 0) {
+			composicaoSelecionada = composicoesValidas[0];
+
+			seletorComposicoes = document.createElement("div");
+			seletorComposicoes.className = "product-compositions";
+			const label = document.createElement("span");
+			label.textContent = "Escolha uma opção:";
+			label.id = `composicao-${produto.id}`;
+			const opcoesComposicoes = document.createElement("div");
+			opcoesComposicoes.className = "composition-options";
+			opcoesComposicoes.setAttribute("role", "group");
+			opcoesComposicoes.setAttribute("aria-labelledby", label.id);
+			const descricaoComposicao = document.createElement("p");
+			descricaoComposicao.className = "composition-description";
+			descricaoComposicao.textContent = composicaoSelecionada.descricao;
+			descricaoComposicao.hidden = !composicaoSelecionada.descricao;
+
+			composicoesValidas.forEach((composicao, indice) => {
+				const botaoComposicao = document.createElement("button");
+				botaoComposicao.type = "button";
+				botaoComposicao.className = "composition-btn";
+				botaoComposicao.classList.toggle("is-selected", indice === 0);
+				botaoComposicao.setAttribute("aria-pressed", String(indice === 0));
+				botaoComposicao.textContent = composicao.nome;
+				botaoComposicao.addEventListener("click", () => {
+					composicaoSelecionada = composicoesValidas[indice];
+					descricaoComposicao.textContent = composicaoSelecionada.descricao;
+					descricaoComposicao.hidden = !composicaoSelecionada.descricao;
+					opcoesComposicoes.querySelectorAll(".composition-btn").forEach((botao, indiceBotao) => {
+						const selecionado = indiceBotao === indice;
+						botao.classList.toggle("is-selected", selecionado);
+						botao.setAttribute("aria-pressed", String(selecionado));
+					});
+
+					const precoBase = Number(composicaoSelecionada.preco);
+					const precoComDesconto = Math.max(0.01, precoBase - descontoIndividual - descontoGlobal);
+					precoOriginal.textContent = formatarPreco(precoBase);
+					preco.textContent = formatarPreco(precoComDesconto);
+					precoOriginal.hidden = descontoTotal <= 0;
+				});
+				opcoesComposicoes.append(botaoComposicao);
+			});
+
+			seletorComposicoes.append(label, opcoesComposicoes, descricaoComposicao);
+		}
+	}
+
 	const rodape = document.createElement("div");
 	rodape.className = "product-footer";
 
 	const precos = document.createElement("div");
-	const precoFinal = Math.max(0.01, Number(produto.preco) - descontoIndividual - descontoGlobal);
+	const precoBaseExibido = composicaoSelecionada ? Number(composicaoSelecionada.preco) : Number(produto.preco);
+	const precoFinal = Math.max(0.01, precoBaseExibido - descontoIndividual - descontoGlobal);
 	const precoOriginal = document.createElement("span");
 	precoOriginal.className = "price-original";
-	precoOriginal.textContent = formatarPreco(Number(produto.preco));
+	precoOriginal.textContent = formatarPreco(precoBaseExibido);
 	const preco = document.createElement("span");
 	preco.className = "price-label";
 	preco.textContent = formatarPreco(precoFinal);
-	if (descontoTotal > 0) {
-		precos.append(precoOriginal);
-	}
-	precos.append(preco);
+	precoOriginal.hidden = descontoTotal <= 0;
+	precos.append(precoOriginal, preco);
 
 	const comprar = document.createElement("button");
 	comprar.className = "buy-button";
 	comprar.type = "button";
 	comprar.textContent = "Adicionar ao carrinho";
-	comprar.addEventListener("click", () => adicionarAoCarrinho(produto));
+	comprar.addEventListener("click", () => adicionarAoCarrinho(produto, composicaoSelecionada));
 
 	const acoes = document.createElement("div");
 	acoes.className = "product-actions";
 	acoes.append(comprar);
 	rodape.append(precos, acoes);
-	conteudo.append(categoria, titulo, descricao, tags, rodape);
+	if (seletorComposicoes) {
+		conteudo.append(categoria, titulo, descricao, tags, seletorComposicoes, rodape);
+	} else {
+		conteudo.append(categoria, titulo, descricao, tags, rodape);
+	}
 	artigo.append(imagemWrap, conteudo);
 	return artigo;
 }
@@ -218,7 +298,9 @@ function renderizarAbasCategorias() {
 
 function renderizarProdutos() {
 	listaProdutos.replaceChildren();
-	const produtosFiltrados = produtos.filter((produto) => produto.categoria === categoriaAtiva);
+	const produtosFiltrados = produtos.filter((produto) =>
+		produto.visivel !== false && produto.categoria === categoriaAtiva
+	);
 
 	if (produtosFiltrados.length === 0) {
 		const vazio = document.createElement("div");
@@ -231,28 +313,42 @@ function renderizarProdutos() {
 	produtosFiltrados.forEach((produto) => listaProdutos.append(criarCard(produto)));
 }
 
-function adicionarAoCarrinho(produto) {
-	const itemExistente = carrinho.find((item) => item.produto.id === produto.id);
+function adicionarAoCarrinho(produto, composicao = null) {
+	const nomeComposicao = composicao?.nome || null;
+	const itemExistente = carrinho.find((item) =>
+		item.produto.id === produto.id &&
+		(item.composicao?.nome || null) === nomeComposicao
+	);
 	if (itemExistente) {
 		itemExistente.quantidade += 1;
 	} else {
-		carrinho.push({ produto, quantidade: 1 });
+		carrinho.push({
+			produto,
+			composicao: composicao ? { nome: composicao.nome, preco: Number(composicao.preco) } : null,
+			quantidade: 1
+		});
 	}
 
 	localStorage.setItem("dadosEdoces_carrinho", JSON.stringify(carrinho));
 	renderizarCarrinho();
-	feedbackCarrinho.textContent = `${produto.nome} adicionado ao carrinho.`;
+	feedbackCarrinho.textContent = `${produto.nome}${nomeComposicao ? ` (${nomeComposicao})` : ""} adicionado ao carrinho.`;
 }
 
-function alterarQuantidade(produtoId, variacao) {
-	const item = carrinho.find((itemAtual) => itemAtual.produto.id === produtoId);
+function alterarQuantidade(produtoId, composicaoNome, variacao) {
+	const item = carrinho.find((itemAtual) =>
+		itemAtual.produto.id === produtoId &&
+		(itemAtual.composicao?.nome || null) === composicaoNome
+	);
 	if (!item) {
 		return;
 	}
 
 	item.quantidade += variacao;
 	if (item.quantidade <= 0) {
-		carrinho = carrinho.filter((itemAtual) => itemAtual.produto.id !== produtoId);
+		carrinho = carrinho.filter((itemAtual) =>
+			!(itemAtual.produto.id === produtoId &&
+				(itemAtual.composicao?.nome || null) === composicaoNome)
+		);
 	}
 
 	localStorage.setItem("dadosEdoces_carrinho", JSON.stringify(carrinho));
@@ -263,12 +359,7 @@ function renderizarCarrinho() {
 	itensCarrinho.replaceChildren();
 	const quantidadeTotal = carrinho.reduce((total, item) => total + item.quantidade, 0);
 	const valorTotal = carrinho.reduce((total, item) => {
-		let descontoGlobal = 0;
-		if (configOferta.ativa === true && (configOferta.categoria === "Todas" || configOferta.categoria === item.produto.categoria)) {
-			descontoGlobal = Number(configOferta.valor) || 0;
-		}
-		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0) - descontoGlobal);
-		return total + precoFinal * item.quantidade;
+		return total + calcularPrecoItem(item) * item.quantidade;
 	}, 0);
 	contadorCarrinho.textContent = quantidadeTotal;
 	totalCarrinho.textContent = formatarPreco(valorTotal);
@@ -290,14 +381,10 @@ function renderizarCarrinho() {
 		informacoes.className = "cart-item-info";
 
 		const nome = document.createElement("strong");
-		nome.textContent = item.produto.nome;
+		nome.textContent = `${item.produto.nome}${item.composicao?.nome ? ` (${item.composicao.nome})` : ""}`;
 
 		const preco = document.createElement("span");
-		let descontoGlobal = 0;
-		if (configOferta.ativa === true && (configOferta.categoria === "Todas" || configOferta.categoria === item.produto.categoria)) {
-			descontoGlobal = Number(configOferta.valor) || 0;
-		}
-		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0) - descontoGlobal);
+		const precoFinal = calcularPrecoItem(item);
 		preco.textContent = `${formatarPreco(precoFinal)} cada`;
 		informacoes.append(nome, preco);
 
@@ -308,8 +395,8 @@ function renderizarCarrinho() {
 		diminuir.className = "quantity-button";
 		diminuir.type = "button";
 		diminuir.textContent = "−";
-		diminuir.setAttribute("aria-label", `Remover uma unidade de ${item.produto.nome}`);
-		diminuir.addEventListener("click", () => alterarQuantidade(item.produto.id, -1));
+		diminuir.setAttribute("aria-label", `Remover uma unidade de ${nome.textContent}`);
+		diminuir.addEventListener("click", () => alterarQuantidade(item.produto.id, item.composicao?.nome || null, -1));
 
 		const quantidade = document.createElement("span");
 		quantidade.textContent = item.quantidade;
@@ -318,8 +405,8 @@ function renderizarCarrinho() {
 		aumentar.className = "quantity-button";
 		aumentar.type = "button";
 		aumentar.textContent = "+";
-		aumentar.setAttribute("aria-label", `Adicionar uma unidade de ${item.produto.nome}`);
-		aumentar.addEventListener("click", () => alterarQuantidade(item.produto.id, 1));
+		aumentar.setAttribute("aria-label", `Adicionar uma unidade de ${nome.textContent}`);
+		aumentar.addEventListener("click", () => alterarQuantidade(item.produto.id, item.composicao?.nome || null, 1));
 
 		controles.append(diminuir, quantidade, aumentar);
 		linha.append(informacoes, controles);
@@ -339,21 +426,13 @@ function realizarPedido() {
 	}
 
 	const linhas = carrinho.map((item) => {
-		let descontoGlobal = 0;
-		if (configOferta.ativa === true && (configOferta.categoria === "Todas" || configOferta.categoria === item.produto.categoria)) {
-			descontoGlobal = Number(configOferta.valor) || 0;
-		}
-		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0) - descontoGlobal);
+		const precoFinal = calcularPrecoItem(item);
 		const subtotal = precoFinal * item.quantidade;
-		return `- ${item.quantidade}x ${item.produto.nome}: ${formatarPreco(precoFinal)} cada | Subtotal: ${formatarPreco(subtotal)}`;
+		const nomeProduto = `${item.produto.nome}${item.composicao?.nome ? ` (${item.composicao.nome})` : ""}`;
+		return `- ${item.quantidade}x ${nomeProduto}: ${formatarPreco(precoFinal)} cada | Subtotal: ${formatarPreco(subtotal)}`;
 	});
 	const total = carrinho.reduce((soma, item) => {
-		let descontoGlobal = 0;
-		if (configOferta.ativa === true && (configOferta.categoria === "Todas" || configOferta.categoria === item.produto.categoria)) {
-			descontoGlobal = Number(configOferta.valor) || 0;
-		}
-		const precoFinal = Math.max(0.01, Number(item.produto.preco) - (Number(item.produto.desconto) || 0) - descontoGlobal);
-		return soma + precoFinal * item.quantidade;
+		return soma + calcularPrecoItem(item) * item.quantidade;
 	}, 0);
 	const mensagem = [
 		`Olá! Meu nome é *${nomeCliente}* e gostaria de realizar este pedido:`,

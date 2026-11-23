@@ -27,11 +27,13 @@
 
 html {
 	scroll-behavior: smooth;
+	overflow-x: hidden;
 }
 
 body {
 	min-width: 320px;
 	margin: 0;
+	overflow-x: hidden;
 	color: var(--ink);
 	font-family: var(--body);
 	background-color: var(--cream);
@@ -158,8 +160,8 @@ h1 span {
 }
 
 .order-info-panel {
+	width: min(100% - 30px, 800px);
 	margin: 20px auto;
-	max-width: 800px;
 	padding: 15px 20px;
 	background-color: var(--cream, #FFF3C7);
 	border: 2px solid var(--ink, #2B1E16);
@@ -187,7 +189,7 @@ h1 span {
 
 .page-shell {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 280px;
+	grid-template-columns: minmax(0, 1fr) minmax(260px, 280px);
 	gap: 38px;
 	align-items: start;
 	padding-top: 58px;
@@ -212,6 +214,7 @@ h1 span {
 
 .category-tabs {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 }
 
@@ -244,6 +247,7 @@ h1 span {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
+	max-width: 100%;
 	padding: 12px;
 	background: var(--paper);
 	border: 3px double var(--line);
@@ -290,8 +294,8 @@ h1 span {
 	background: rgba(0, 0, 0, 0.4);
 	color: var(--cream);
 	border: none;
-	width: 26px;
-	height: 26px;
+	width: 44px;
+	height: 44px;
 	border-radius: 50%;
 	cursor: pointer;
 	display: flex;
@@ -394,6 +398,68 @@ h1 span {
 	gap: 7px;
 }
 
+.product-compositions {
+	display: grid;
+	gap: 7px;
+	margin: -3px 0 15px;
+}
+
+.product-compositions > span {
+	margin: 0;
+	color: var(--ink);
+	font-size: 0.72rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.composition-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.composition-description {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.76rem;
+	line-height: 1.4;
+}
+
+.composition-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: auto;
+	min-height: 40px;
+	padding: 8px 11px;
+	color: var(--ink);
+	background: rgba(255, 248, 220, 0.65);
+	border: 1px solid rgba(123, 57, 40, 0.4);
+	border-radius: 999px;
+	font-family: var(--body);
+	font-size: 0.82rem;
+	font-weight: 700;
+	line-height: 1.25;
+	cursor: pointer;
+	transition: color 150ms ease, background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.composition-btn:hover,
+.composition-btn.is-selected {
+	background: var(--pink);
+	border-color: var(--teal);
+}
+
+.composition-btn.is-selected {
+	box-shadow: 0 2px 0 rgba(123, 57, 40, 0.18);
+}
+
+.composition-btn:focus-visible {
+	outline: 3px solid rgba(166, 77, 47, 0.28);
+	outline-offset: 1px;
+}
+
 .price-label {
 	display: inline-block;
 	padding: 9px 12px;
@@ -447,6 +513,32 @@ h1 span {
 	font-weight: 800;
 	cursor: pointer;
 	transition: background 150ms ease, transform 150ms ease;
+}
+
+.category-tab,
+.composition-btn,
+.buy-button,
+.checkout-button,
+.quantity-button,
+.carousel-btn,
+.composition-add-button,
+.composition-remove-button,
+.edit-button,
+.discount-btn,
+.delete-button,
+.visibility-button,
+.admin-back-link,
+.submit-button,
+.admin-close,
+.admin-toggle {
+	min-width: 44px;
+	min-height: 44px;
+}
+
+.admin-back-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .buy-button {
@@ -516,6 +608,7 @@ h1 span {
 	position: sticky;
 	top: 24px;
 	min-width: 0;
+	max-width: 100%;
 	padding: 22px;
 	background: var(--paper);
 	border: 3px double var(--line);
@@ -599,8 +692,8 @@ h1 span {
 .quantity-button {
 	display: grid;
 	place-items: center;
-	width: 25px;
-	height: 25px;
+	width: 44px;
+	height: 44px;
 	padding: 0;
 	color: var(--line);
 	font: inherit;
@@ -684,8 +777,8 @@ h1 span {
 .admin-close {
 	display: grid;
 	place-items: center;
-	width: 30px;
-	height: 30px;
+	width: 44px;
+	height: 44px;
 	padding: 0;
 	color: var(--line);
 	font: inherit;
@@ -727,8 +820,15 @@ h1 span {
 
 .form-row {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 12px;
+}
+
+.form-field,
+.admin-form-column,
+.admin-vitrine-column,
+.page-shell > * {
+	min-width: 0;
 }
 
 label {
@@ -742,6 +842,8 @@ input,
 select,
 textarea {
 	width: 100%;
+	min-width: 0;
+	min-height: 44px;
 	padding: 11px 12px;
 	color: var(--ink);
 	font: inherit;
@@ -753,6 +855,10 @@ textarea {
 
 textarea {
 	resize: vertical;
+}
+
+input[type="file"] {
+	max-width: 100%;
 }
 
 input:focus,
@@ -865,6 +971,114 @@ textarea:focus {
 	margin: 0;
 }
 
+.compositions-section {
+	margin: 18px 0;
+	padding: 16px;
+	background: var(--cream);
+	border: 2px solid var(--line);
+	box-shadow: 4px 4px 0 var(--mustard);
+}
+
+.compositions-heading {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 12px;
+	padding-bottom: 10px;
+	border-bottom: 2px solid var(--line);
+}
+
+.compositions-heading h3 {
+	margin: 0;
+	font-size: 1.15rem;
+}
+
+.composition-add-button,
+.composition-remove-button,
+.edit-button {
+	padding: 9px 10px;
+	color: var(--cream);
+	font-family: var(--body);
+	font-size: 0.68rem;
+	font-weight: 800;
+	background: var(--teal);
+	border: 2px solid var(--line);
+	cursor: pointer;
+}
+
+.compositions-list {
+	display: grid;
+	gap: 10px;
+}
+
+.composition-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+	align-items: end;
+	gap: 8px;
+	padding: 10px;
+	background: var(--paper);
+	border: 2px dashed var(--line);
+}
+
+.composition-row .form-field {
+	margin: 0;
+}
+
+.composition-row label {
+	margin-bottom: 5px;
+	font-size: 0.66rem;
+}
+
+.composition-row input {
+	margin: 0;
+}
+
+.compositions-help {
+	margin: -3px 0 12px;
+	color: var(--muted);
+	font-size: 0.76rem;
+	line-height: 1.45;
+}
+
+.composition-remove-button {
+	margin-bottom: 1px;
+	background: var(--red);
+}
+
+.admin-product-actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.visibility-button {
+	grid-column: 1 / -1;
+	padding: 9px 10px;
+	color: var(--cream);
+	font-family: var(--body);
+	font-size: 0.68rem;
+	font-weight: 800;
+	background: var(--teal);
+	border: 2px solid var(--line);
+	cursor: pointer;
+}
+
+.visibility-button.is-hidden {
+	color: var(--ink);
+	background: var(--mustard);
+}
+
+.visibility-button:hover {
+	background: var(--red);
+	color: var(--cream);
+}
+
+.edit-button {
+	background: var(--teal);
+}
+
 .admin-vitrine-column {
 	min-width: 0;
 	padding-left: 28px;
@@ -898,6 +1112,33 @@ textarea:focus {
 
 .admin-product-card {
 	transform: none;
+}
+
+.admin-product-card.is-hidden {
+	border-style: dashed;
+	border-color: var(--muted);
+	box-shadow: 5px 5px 0 rgba(123, 57, 40, 0.3);
+}
+
+.admin-product-card.is-hidden:hover {
+	transform: none;
+	box-shadow: 5px 5px 0 rgba(123, 57, 40, 0.3);
+}
+
+.admin-product-card.is-hidden .product-image-wrap {
+	opacity: 0.58;
+}
+
+.visibility-badge {
+	align-self: flex-start;
+	padding: 6px 8px;
+	color: var(--cream);
+	font-size: 0.62rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	background: var(--red);
+	border: 2px solid var(--line);
 }
 
 .admin-product-card .product-content {
@@ -1005,6 +1246,29 @@ textarea:focus {
 	.cart-panel {
 		position: static;
 	}
+
+	.admin-dashboard-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.admin-vitrine-column {
+		padding-top: 28px;
+		padding-left: 0;
+		border-top: 2px solid var(--line);
+		border-left: 0;
+	}
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+	.product-footer {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.product-actions,
+	.product-actions .buy-button {
+		width: 100%;
+	}
 }
 
 @media (max-width: 620px) {
@@ -1021,6 +1285,13 @@ textarea:focus {
 		display: block;
 	}
 
+	.admin-page .header-inner {
+		display: flex;
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 14px;
+	}
+
 	.brand-die {
 		width: 78px;
 		height: 90px;
@@ -1031,7 +1302,7 @@ textarea:focus {
 	}
 
 	.header-copy {
-		margin: 22px 0 0 83px;
+		margin: 18px 0 0;
 		text-align: left;
 	}
 
@@ -1073,24 +1344,25 @@ textarea:focus {
 		padding: 22px 18px;
 	}
 
-	.admin-dashboard-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.admin-vitrine-column {
-		padding-top: 28px;
-		padding-left: 0;
-		border-top: 2px solid var(--line);
-		border-left: 0;
-	}
-
-	.admin-page .header-inner {
-		display: flex;
-		align-items: end;
-		gap: 16px;
-	}
-
 	.admin-page h1 {
 		font-size: 2.25rem;
 	}
+
+	.compositions-heading {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.composition-add-button {
+		width: 100%;
+	}
+
+	.composition-row {
+		grid-template-columns: 1fr;
+	}
+
+	.composition-remove-button {
+		width: 100%;
+	}
+
 }
