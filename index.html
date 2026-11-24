@@ -7,25 +7,15 @@
 	<title>Dados &amp; Doces | Vitrine de Brownies e Cookies</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lobster&family=Pacifico&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Young+Serif&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-	<header class="site-header">
+	<header class="site-header store-header">
 		<div class="header-inner">
-			<div class="brand-lockup">
-				<img
-					class="brand-die"
-					src="artes/logoDoce2.jpeg"
-					alt="Dado de 20 faces"
-				>
-				<div>
-					<h1>Dados <span>&amp;</span> Doces</h1>
-				</div>
-			</div>
-			<div class="header-copy">
-				<p>Brownies e cookies artesanais</p>
-			</div>
+			<h1 class="header-wordmark-heading">
+				<img class="header-wordmark" src="artes/LetreiroLogo-Photoroom.png" alt="Doces &amp; Dados">
+			</h1>
 		</div>
 	</header>
 
@@ -49,13 +39,14 @@
 			<div id="lista-produtos" class="product-grid" aria-live="polite"></div>
 		</section>
 
-		<aside class="cart-panel" aria-labelledby="cart-title">
+		<aside id="cart-panel" class="cart-panel" aria-labelledby="cart-title">
 			<div class="cart-heading">
 				<div>
 					<p class="eyebrow">Seu pedido</p>
 					<h2 id="cart-title">Carrinho</h2>
 				</div>
 				<span id="cart-count" class="cart-count" aria-live="polite">0</span>
+				<button id="cart-close-button" class="cart-close-button" type="button" aria-label="Fechar carrinho">×</button>
 			</div>
 			<div id="cart-items" class="cart-items" aria-live="polite">
 				<p class="cart-empty">Seu carrinho está vazio.</p>
@@ -72,6 +63,11 @@
 		</aside>
 
 	</main>
+	<button id="cart-backdrop" class="cart-backdrop" type="button" aria-label="Fechar carrinho" aria-hidden="true" tabindex="-1"></button>
+	<button id="cart-toggle" class="cart-floating-button" type="button" aria-controls="cart-panel" aria-expanded="false" aria-label="Abrir carrinho">
+		<img class="cart-floating-icon" src="artes/CarrinhoPNG-Photoroom.png" alt="Abrir carrinho">
+		<span id="cart-floating-count" class="cart-floating-count" aria-hidden="true">0</span>
+	</button>
 	<footer class="site-footer">
 		<p>Feito para aventureiros com fome &bull; Dados &amp; Doces</p>
 	</footer>

@@ -30,6 +30,127 @@ const totalCarrinho = document.querySelector("#cart-total");
 const botaoPedido = document.querySelector("#checkout-button");
 const feedbackCarrinho = document.querySelector("#cart-feedback");
 const inputNomeCliente = document.querySelector("#customer-name");
+const painelCarrinho = document.querySelector("#cart-panel");
+const botaoCarrinhoFlutuante = document.querySelector("#cart-toggle");
+const contadorCarrinhoFlutuante = document.querySelector("#cart-floating-count");
+const botaoFecharCarrinho = document.querySelector("#cart-close-button");
+const fundoCarrinho = document.querySelector("#cart-backdrop");
+const rodapePagina = document.querySelector(".site-footer");
+const conteudoExteriorCarrinho = document.querySelectorAll(".site-header, .order-info-panel, #vitrine, .site-footer");
+const breakpointCarrinhoMobile = window.matchMedia("(max-width: 768px)");
+const cabecalhoLoja = document.querySelector(".store-header");
+const breakpointCabecalhoMobile = window.matchMedia("(max-width: 768px)");
+
+let gavetaCarrinhoAberta = false;
+let frameAtualizacaoBotaoCarrinho = null;
+let cabecalhoCompacto = false;
+let frameAtualizacaoCabecalho = null;
+
+function atualizarEstadoCabecalho() {
+	const limiteRolagem = cabecalhoCompacto ? 12 : 24;
+	const compacto = breakpointCabecalhoMobile.matches && window.scrollY > limiteRolagem;
+	if (compacto === cabecalhoCompacto) {
+		return;
+	}
+
+	cabecalhoLoja.classList.toggle("is-scrolled", compacto);
+	cabecalhoCompacto = compacto;
+}
+
+function agendarAtualizacaoCabecalho() {
+	if (frameAtualizacaoCabecalho !== null) {
+		return;
+	}
+
+	frameAtualizacaoCabecalho = window.requestAnimationFrame(() => {
+		frameAtualizacaoCabecalho = null;
+		atualizarEstadoCabecalho();
+	});
+}
+
+window.addEventListener("scroll", agendarAtualizacaoCabecalho, { passive: true });
+window.addEventListener("resize", agendarAtualizacaoCabecalho);
+atualizarEstadoCabecalho();
+
+function atualizarEstadoGavetaCarrinho() {
+	const mobile = breakpointCarrinhoMobile.matches;
+	if (!mobile) {
+		gavetaCarrinhoAberta = false;
+	}
+
+	const aberta = mobile && gavetaCarrinhoAberta;
+	painelCarrinho.classList.toggle("is-open", aberta);
+	painelCarrinho.setAttribute("aria-hidden", String(mobile && !aberta));
+	painelCarrinho.inert = mobile && !aberta;
+	if (aberta) {
+		painelCarrinho.setAttribute("role", "dialog");
+		painelCarrinho.setAttribute("aria-modal", "true");
+	} else {
+		painelCarrinho.removeAttribute("role");
+		painelCarrinho.removeAttribute("aria-modal");
+	}
+	conteudoExteriorCarrinho.forEach((elemento) => {
+		elemento.inert = aberta;
+	});
+	fundoCarrinho.classList.toggle("is-visible", aberta);
+	fundoCarrinho.setAttribute("aria-hidden", String(!aberta));
+	fundoCarrinho.inert = !aberta;
+	botaoCarrinhoFlutuante.setAttribute("aria-expanded", String(aberta));
+	document.body.classList.toggle("cart-drawer-open", aberta);
+}
+
+function definirGavetaCarrinhoAberta(aberta) {
+	if (!breakpointCarrinhoMobile.matches) {
+		return;
+	}
+
+	gavetaCarrinhoAberta = aberta;
+	atualizarEstadoGavetaCarrinho();
+	if (aberta) {
+		botaoFecharCarrinho.focus();
+	} else {
+		agendarAtualizacaoBotaoCarrinho();
+		botaoCarrinhoFlutuante.focus();
+	}
+}
+
+function agendarAtualizacaoBotaoCarrinho() {
+	if (!breakpointCarrinhoMobile.matches || gavetaCarrinhoAberta || frameAtualizacaoBotaoCarrinho !== null) {
+		return;
+	}
+
+	frameAtualizacaoBotaoCarrinho = window.requestAnimationFrame(() => {
+		frameAtualizacaoBotaoCarrinho = null;
+		const botao = botaoCarrinhoFlutuante.getBoundingClientRect();
+		const alvos = [...document.querySelectorAll(".buy-button"), rodapePagina];
+		const sobrepoeConteudo = alvos.some((alvo) => {
+			const area = alvo.getBoundingClientRect();
+			return area.width > 0 &&
+				area.height > 0 &&
+				botao.left < area.right &&
+				botao.right > area.left &&
+				botao.top < area.bottom &&
+				botao.bottom > area.top;
+		});
+		botaoCarrinhoFlutuante.classList.toggle("is-obscured", sobrepoeConteudo);
+	});
+}
+
+botaoCarrinhoFlutuante.addEventListener("click", () => {
+	definirGavetaCarrinhoAberta(!gavetaCarrinhoAberta);
+});
+botaoFecharCarrinho.addEventListener("click", () => definirGavetaCarrinhoAberta(false));
+fundoCarrinho.addEventListener("click", () => definirGavetaCarrinhoAberta(false));
+document.addEventListener("keydown", (evento) => {
+	if (evento.key === "Escape" && gavetaCarrinhoAberta) {
+		definirGavetaCarrinhoAberta(false);
+	}
+});
+window.addEventListener("resize", () => {
+	atualizarEstadoGavetaCarrinho();
+	agendarAtualizacaoBotaoCarrinho();
+});
+window.addEventListener("scroll", agendarAtualizacaoBotaoCarrinho, { passive: true });
 
 function formatarPreco(preco) {
 	return Number(preco).toLocaleString("pt-BR", {
@@ -307,10 +428,12 @@ function renderizarProdutos() {
 		vazio.className = "category-empty-state";
 		vazio.innerHTML = "<h3>Novidades a caminho!</h3><p>Esta categoria está se preparando para o show. Em breve novos loots estarão disponíveis por aqui.</p>";
 		listaProdutos.append(vazio);
+		agendarAtualizacaoBotaoCarrinho();
 		return;
 	}
 
 	produtosFiltrados.forEach((produto) => listaProdutos.append(criarCard(produto)));
+	agendarAtualizacaoBotaoCarrinho();
 }
 
 function adicionarAoCarrinho(produto, composicao = null) {
@@ -362,6 +485,11 @@ function renderizarCarrinho() {
 		return total + calcularPrecoItem(item) * item.quantidade;
 	}, 0);
 	contadorCarrinho.textContent = quantidadeTotal;
+	contadorCarrinhoFlutuante.textContent = quantidadeTotal;
+	botaoCarrinhoFlutuante.setAttribute(
+		"aria-label",
+		quantidadeTotal === 1 ? "Abrir carrinho, 1 item" : `Abrir carrinho, ${quantidadeTotal} itens`
+	);
 	totalCarrinho.textContent = formatarPreco(valorTotal);
 	botaoPedido.disabled = carrinho.length === 0;
 
@@ -453,6 +581,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	botaoPedido.addEventListener("click", realizarPedido);
 	renderizarAbasCategorias();
 	renderizarCarrinho();
+	atualizarEstadoGavetaCarrinho();
+	agendarAtualizacaoBotaoCarrinho();
 
 	onSnapshot(collection(db, "produtos"), (snapshot) => {
 		const produtosFirebase = snapshot.docs.map((documento) => ({
