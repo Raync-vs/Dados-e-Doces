@@ -1507,7 +1507,7 @@ textarea:focus {
 	.cart-floating-button {
 		position: fixed;
 		right: max(16px, env(safe-area-inset-right));
-		bottom: calc(20px + env(safe-area-inset-bottom));
+		bottom: calc(76px + env(safe-area-inset-bottom, 0px));
 		z-index: 20;
 		display: grid;
 		width: 64px;
